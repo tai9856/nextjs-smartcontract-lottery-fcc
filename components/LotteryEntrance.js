@@ -87,7 +87,7 @@ export default function LotteryEntrance() {
             type: "success",
             message: "Transaction Complete!",
             title: "Transaction Notification",
-            position: "topR",
+            position: "topL",
         })
     }
 
