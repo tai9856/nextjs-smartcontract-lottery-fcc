@@ -12,6 +12,8 @@ export default function LotteryEntrance() {
     const chainId = parseInt(chainIdHex)
     const raffleAddress = chainId in contractAddresses ? contractAddresses[chainId][0] : null
     const [entranceFee, setEntranceFee] = useState("0")
+    const [numberOfPlayers, setNumberOfPlayers] = useState("0")
+    const [recentWinner, setRecentWinner] = useState("0")
 
     const dispatch = useNotification()
 
@@ -30,12 +32,31 @@ export default function LotteryEntrance() {
         params: {},
     })
 
+    const { runContractFunction: getNumberOfPlayers } = useWeb3Contract({
+        abi: abi,
+        contractAddress: raffleAddress,
+        functionName: "getNumberOfPlayers",
+        params: {},
+    })
+
+    const { runContractFunction: getRecentWinner } = useWeb3Contract({
+        abi: abi,
+        contractAddress: raffleAddress,
+        functionName: "getRecentWinner",
+        params: {},
+    })
+
+    async function updateUI() {
+        const entranceFeeFromCall = (await getEntranceFee()).toString()
+        const numberOfPlayersFromCall = (await getNumberOfPlayers()).toString()
+        const recentWinnerFromCall = await getRecentWinner()
+        setEntranceFee(entranceFeeFromCall)
+        setNumberOfPlayers(numberOfPlayersFromCall)
+        setRecentWinner(recentWinnerFromCall)
+    }
+
     useEffect(() => {
         if (isWeb3Enabled) {
-            async function updateUI() {
-                const entranceFeeFromCall = (await getEntranceFee()).toString()
-                setEntranceFee(entranceFeeFromCall)
-            }
             updateUI()
         }
     }, [isWeb3Enabled])
@@ -43,6 +64,7 @@ export default function LotteryEntrance() {
     const handleSuccess = async function (tx) {
         await tx.wait(1)
         handleNewNotification(tx)
+        updateUI()
     }
 
     const handleNewNotification = function () {
@@ -69,7 +91,9 @@ export default function LotteryEntrance() {
                     >
                         Enter Raffle
                     </button>
-                    Entrance Fee: {ethers.formatEther(entranceFee)} ETH
+                    Entrance Fee: {ethers.formatEther(entranceFee)} ETH Number of players:
+                    {numberOfPlayers}
+                    recentWinner: {recentWinner}
                 </div>
             ) : (
                 <div>No Raffle Address Detached!</div>
